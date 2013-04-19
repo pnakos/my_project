@@ -5,6 +5,8 @@ import random
 import time
 import logging
 import argparse
+import thread
+import sys
 
 # Argument parser set-up
 parser = argparse.ArgumentParser()
@@ -16,6 +18,12 @@ logging.basicConfig(format='%(levelname)-8s %(message)s')
 
 # Read fuzzing strings
 fuzz = open("fuzz_strings.txt", 'r')
+
+# Add xmpp handlers
+xmpp.add_event_handler("disconnected", disconnect, threaded=True)
+
+def disconnect(event):
+	xmpp.disconnect(wait=False)
  
 def message(xmpp):
 	#a list of all printable chars
@@ -27,18 +35,21 @@ def message(xmpp):
 def fuzz_connection():
 
 	line = fuzz.readline()
-	while line != '':
-		print line.strip() +'@ubuntu/test'
-		xmpp = sleekxmpp.ClientXMPP(line.strip() + '@ubuntu/test', 'bill')
-		xmpp['feature_mechanisms'].unencrypted_plain = True # Force plaintext authentication https://groups.google.com/forum/?fromgroups=#!topic/sleekxmpp-discussion/RCzU4qa0Bfg
-		xmpp.connect(address=('172.16.206.152', 5222), use_tls = False)
-		xmpp.process(block=False)
-		xmpp.send_presence()
-		time.sleep(1)
-		xmpp.disconnect(wait=False)
-		line = fuzz.readline()
-
-	fuzz.close()
+	try:
+		while line != '':
+			print line.strip() + '@ubuntu/test'
+			xmpp = sleekxmpp.ClientXMPP(line.strip() + '@ubuntu/test', 'bill')
+			xmpp['feature_mechanisms'].unencrypted_plain = True # Force plaintext authentication https://groups.google.com/forum/?fromgroups=#!topic/sleekxmpp-discussion/RCzU4qa0Bfg
+			xmpp.connect(address=('172.16.206.152', 5222), use_tls = False)
+			xmpp.process(block=False)
+			xmpp.send_presence()
+			time.sleep(1)
+			xmpp.disconnect(wait=False)
+			line = fuzz.readline()
+	except ValueError:
+		fuzz.close()
+		sys.exit(1)
+	
 	# xmpp = sleekxmpp.ClientXMPP('bill@' + payload + '/test', 'bill')
 	# xmpp['feature_mechanisms'].unencrypted_plain = True # Force plaintext authentication https://groups.google.com/forum/?fromgroups=#!topic/sleekxmpp-discussion/RCzU4qa0Bfg
 	# xmpp.connect(address=('172.16.206.152', 5222), use_tls = False)
@@ -71,10 +82,15 @@ def main():
 
 	xmpp.disconnect(wait=True)
 
+j=0
 
 if __name__ == '__main__':
 	if args.connection:
 		print "Fuzzing JID fields..."
-		fuzz_connection()
+		for j in range(5):
+			thread.start_new_thread(fuzz_connection,())
+		while True:
+			pass
+	
 	else:
 		main()
