@@ -13,6 +13,9 @@ args = parser.parse_args()
 
 #Setup logging
 logging.basicConfig(format='%(levelname)-8s %(message)s')
+
+# Read fuzzing strings
+fuzz = open("fuzz_strings.txt", 'r')
  
 def message(xmpp):
 	#a list of all printable chars
@@ -22,27 +25,34 @@ def message(xmpp):
 		mtype= 'chat')
 
 def fuzz_connection():
-	payload = 'a' * 1024
 
-	xmpp = sleekxmpp.ClientXMPP(payload +'@ubuntu/test', 'bill')
-	xmpp['feature_mechanisms'].unencrypted_plain = True # Force plaintext authentication https://groups.google.com/forum/?fromgroups=#!topic/sleekxmpp-discussion/RCzU4qa0Bfg
-	xmpp.connect(address=('172.16.206.152', 5222), use_tls = False)
-	xmpp.disconnect(wait=True)
+	line = fuzz.readline()
+	while line != '':
+		print line.strip() +'@ubuntu/test'
+		xmpp = sleekxmpp.ClientXMPP(line.strip() + '@ubuntu/test', 'bill')
+		xmpp['feature_mechanisms'].unencrypted_plain = True # Force plaintext authentication https://groups.google.com/forum/?fromgroups=#!topic/sleekxmpp-discussion/RCzU4qa0Bfg
+		xmpp.connect(address=('172.16.206.152', 5222), use_tls = False)
+		xmpp.process(block=False)
+		xmpp.send_presence()
+		time.sleep(1)
+		xmpp.disconnect(wait=False)
+		line = fuzz.readline()
 
+	fuzz.close()
 	# xmpp = sleekxmpp.ClientXMPP('bill@' + payload + '/test', 'bill')
 	# xmpp['feature_mechanisms'].unencrypted_plain = True # Force plaintext authentication https://groups.google.com/forum/?fromgroups=#!topic/sleekxmpp-discussion/RCzU4qa0Bfg
 	# xmpp.connect(address=('172.16.206.152', 5222), use_tls = False)
 	# xmpp.disconnect(wait=True)
 
-	xmpp = sleekxmpp.ClientXMPP('bill@ubuntu/' + payload, 'bill')
-	xmpp['feature_mechanisms'].unencrypted_plain = True # Force plaintext authentication https://groups.google.com/forum/?fromgroups=#!topic/sleekxmpp-discussion/RCzU4qa0Bfg
-	xmpp.connect(address=('172.16.206.152', 5222), use_tls = False)
-	xmpp.disconnect(wait=True)
+	# xmpp = sleekxmpp.ClientXMPP('bill@ubuntu/' + payload, 'bill')
+	# xmpp['feature_mechanisms'].unencrypted_plain = True # Force plaintext authentication https://groups.google.com/forum/?fromgroups=#!topic/sleekxmpp-discussion/RCzU4qa0Bfg
+	# xmpp.connect(address=('172.16.206.152', 5222), use_tls = False)
+	# xmpp.disconnect(wait=True)
 
-	xmpp = sleekxmpp.ClientXMPP(payload + '@ubuntu/' + payload, 'bill')
-	xmpp['feature_mechanisms'].unencrypted_plain = True # Force plaintext authentication https://groups.google.com/forum/?fromgroups=#!topic/sleekxmpp-discussion/RCzU4qa0Bfg
-	xmpp.connect(address=('172.16.206.152', 5222), use_tls = False)
-	xmpp.disconnect(wait=True)
+	# xmpp = sleekxmpp.ClientXMPP(payload + '@ubuntu/' + payload, 'bill')
+	# xmpp['feature_mechanisms'].unencrypted_plain = True # Force plaintext authentication https://groups.google.com/forum/?fromgroups=#!topic/sleekxmpp-discussion/RCzU4qa0Bfg
+	# xmpp.connect(address=('172.16.206.152', 5222), use_tls = False)
+	# xmpp.disconnect(wait=True)
 	
 def main():
 	xmpp = sleekxmpp.ClientXMPP('bill@ubuntu/test', 'bill')
