@@ -33,16 +33,15 @@ class ConnectionFuzzer(sleekxmpp.ClientXMPP):
 		self.connect(address=('172.16.206.152', 5222), use_tls = False)
 		self.process(block=False)
 		self.add_event_handler("session_start", self.start, threaded=True)
-		self.add_event_handler("failed_auth", self.failed_auth, threaded=True)
+		# self.add_event_handler("failed_auth", self.failed_auth, threaded=True)
 		# self.add_event_handler("disconnected", self.disconnected, threaded=True)
 
 	def start(self, event):
 		self.send_presence()
-		time.sleep(1)
 		self.disconnect(wait=False)
 		
-	def failed_auth(self, event):
-		print "Authentication Failed"
+	# def failed_auth(self, event):
+	# 	print "Authentication Failed"
 		
 	# def disconnected(self):
 	# 	self.disconnect(wait=False)
@@ -54,29 +53,30 @@ if __name__ == '__main__':
 
 	# Argument parser set-up
 	parser = argparse.ArgumentParser()
-	parser.add_argument("--connection", help="Fuzz the JID fields(node, domain, resource)", action="store_true")# action="store_true" no need for argument
+	parser.add_argument("--connection", help="Fuzz the JID fields(node, domain, resource)", action="store_true")# action="store_true" not mandatory argument
 	args = parser.parse_args()
 
 	# Setup logging
 	logging.basicConfig(format='%(levelname)-8s %(message)s')
 
-	# Read fuzzing strings
+	# Open fuzzing strings file
 	fuzz = open("fuzz_strings.txt", "r")
 
 	if args.connection:
 		print "Fuzzing JID fields..."
 		line = fuzz.readline()
-		try:
-			while line != '':
-				print "Fuzzing string... " + line.strip()
-				#thread.start_new_thread(ConnectionFuzzer,(line.strip() + '@ubuntu/test', 'bill'))
-				#ConnectionFuzzer(line.strip() + "@ubuntu/test", "bill")
-				#ConnectionFuzzer("bill@" + line.strip() + "/test", "bill")
-				ConnectionFuzzer("bill@ubuntu/" + line.strip(), "bill")
-				line = fuzz.readline()
-		except ValueError:
-			fuzz.close()
-			sys.exit(1)
+		
+		while line != '':
+			print "Fuzzing string... " + line.strip()
+			#thread.start_new_thread(ConnectionFuzzer,(line.strip() + '@ubuntu/test', 'bill'))
+			# ConnectionFuzzer(line.strip() + "@ubuntu/test", "bill")
+			ConnectionFuzzer("bill@" + line.strip() + "/test", "bill")
+			# ConnectionFuzzer("bill@ubuntu/" + line.strip(), "bill")
+			time.sleep(0.25)
+			line = fuzz.readline()
+
+		fuzz.close()
+		sys.exit(1)
 				
 	else:
 		MessageFuzzer("bill@ubuntu/test", "bill")
