@@ -18,12 +18,6 @@ logging.basicConfig(format='%(levelname)-8s %(message)s')
 
 # Read fuzzing strings
 fuzz = open("fuzz_strings.txt", 'r')
-
-# Add xmpp handlers
-xmpp.add_event_handler("disconnected", disconnect, threaded=True)
-
-def disconnect(event):
-	xmpp.disconnect(wait=False)
  
 def message(xmpp):
 	#a list of all printable chars
@@ -87,10 +81,7 @@ j=0
 if __name__ == '__main__':
 	if args.connection:
 		print "Fuzzing JID fields..."
-		for j in range(5):
-			thread.start_new_thread(fuzz_connection,())
-		while True:
-			pass
+		fuzz_connection()
 	
 	else:
 		main()

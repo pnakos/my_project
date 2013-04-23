@@ -24,12 +24,30 @@ class MessageFuzzer(sleekxmpp.ClientXMPP):
 		self.disconnect(wait=True)
 
 
-class ConnectionFuzzer(sleekxmpp):
-	"""docstring for ConnectionFuzzer"""
-	def __init__(self, arg):
-		super(ConnectionFuzzer, self).__init__()
-		self.arg = arg
+class ConnectionFuzzer(sleekxmpp.ClientXMPP):
+	"""docstring for ConnectionFuzzer
+	"""
+	def __init__(self, jid, password):
+		sleekxmpp.ClientXMPP.__init__(self, jid, password)
+		self['feature_mechanisms'].unencrypted_plain = True # Force plaintext authentication https://groups.google.com/forum/?fromgroups=#!topic/sleekxmpp-discussion/RCzU4qa0Bfg
+		self.connect(address=('172.16.206.152', 5222), use_tls = False)
+		self.process(block=False)
+		self.add_event_handler("session_start", self.start, threaded=True)
+		self.add_event_handler("failed_auth", self.failed_auth, threaded=True)
+		# self.add_event_handler("disconnected", self.disconnected, threaded=True)
+
+	def start(self, event):
+		self.send_presence()
+		time.sleep(1)
+		self.disconnect(wait=False)
 		
+	def failed_auth(self, event):
+		print "Authentication Failed"
+		
+	# def disconnected(self):
+	# 	self.disconnect(wait=False)
+		
+
 
 
 if __name__ == '__main__':
@@ -43,14 +61,22 @@ if __name__ == '__main__':
 	logging.basicConfig(format='%(levelname)-8s %(message)s')
 
 	# Read fuzzing strings
-	fuzz = open("fuzz_strings.txt", 'r')
+	fuzz = open("fuzz_strings.txt", "r")
 
 	if args.connection:
 		print "Fuzzing JID fields..."
-		for j in range(5):
-			thread.start_new_thread(Fuzzer.fuzz_connection,())
-		while True:
-			pass
-	
+		line = fuzz.readline()
+		try:
+			while line != '':
+				print "Fuzzing string... " + line.strip()
+				#thread.start_new_thread(ConnectionFuzzer,(line.strip() + '@ubuntu/test', 'bill'))
+				#ConnectionFuzzer(line.strip() + "@ubuntu/test", "bill")
+				#ConnectionFuzzer("bill@" + line.strip() + "/test", "bill")
+				ConnectionFuzzer("bill@ubuntu/" + line.strip(), "bill")
+				line = fuzz.readline()
+		except ValueError:
+			fuzz.close()
+			sys.exit(1)
+				
 	else:
 		MessageFuzzer("bill@ubuntu/test", "bill")
