@@ -6,8 +6,8 @@
 	An XMPP Fuzzer based on a tweaked SleekXMPP: The Sleek XMPP Library
 	Copyright (C) 2010  Nathanael C. Fritz
 
-	The fields that are fuzzed are the JID , message to: field and 
-	message type field.
+	The fields that are fuzzed are the JID , "message to:" field and 
+	"message type" field.
 
 	pnakos@gmail.com
 """
@@ -22,7 +22,9 @@ import sys
 
 class MessageFuzzer(sleekxmpp.ClientXMPP):
 	"""
-	docstring for Fuzz
+		A basic sleekXMPP bot that will log in, 
+		send a message and then log out.
+	
 	"""
 	def __init__(self, jid, password, recipient, msg_typ):
 		sleekxmpp.ClientXMPP.__init__(self, jid, password)
@@ -35,19 +37,20 @@ class MessageFuzzer(sleekxmpp.ClientXMPP):
 
 	def start(self, event):
 		"""
-		Process the session_start event.
+			Process the session_start event.
 		"""
 		self.send_presence()
 		self.get_roster()
 
-		self.send_message(mto=self.recipient,mbody="Hello World!!!",mtype=self.msg_typ)
+		self.send_message(mto=self.recipient, mbody="Hello World!!!", mtype=self.msg_typ)
 
 		self.disconnect(wait=True)
 
 
 class ConnectionFuzzer(sleekxmpp.ClientXMPP):
 	"""
-	docstring for ConnectionFuzzer
+		A basic sleekXMPP bot that will try to log in
+		and then log out.
 	"""
 	def __init__(self, jid, password):
 		sleekxmpp.ClientXMPP.__init__(self, jid, password)
@@ -60,7 +63,7 @@ class ConnectionFuzzer(sleekxmpp.ClientXMPP):
 
 	def start(self, event):
 		"""
-		Process the session_start event.
+			Process the session_start event.
 		"""
 		self.send_presence()
 		self.disconnect(wait=False)
@@ -91,6 +94,8 @@ if __name__ == '__main__':
 		print "Fuzzing JID fields..."
 		line = fuzz.readline()
 		
+		# For every line in file we call ConnectionFuzzer using this line for username
+		# and /resource.
 		while line != '':
 			print "Fuzzing string... " + line.strip()
 			#thread.start_new_thread(ConnectionFuzzer,(line.strip() + '@ubuntu/test', 'bill'))
@@ -108,9 +113,11 @@ if __name__ == '__main__':
 		print "Fuzzing message fields mto and mtype fields..."
 		line = fuzz.readline()
 		
+		# For every line in file we call ConnectionFuzzer using this line for recipients
+		# name and message type.
 		while line != '':
 			print "Fuzzing string... " + line.strip()
-			MessageFuzzer("bill@ubuntu/test", "bill", line + "@ubuntu", line)
+			MessageFuzzer("bill@ubuntu/test", "bill", line.strip() + "@ubuntu", line.strip())
 			time.sleep(0.25)
 			line = fuzz.readline()
 
