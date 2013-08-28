@@ -15,10 +15,11 @@
 import sleekxmpp
 import random
 import time
-# import logging
+import re
 import argparse
-# import thread
 import sys
+
+JID_PATTERN = re.compile("^(?:(.{1,10250})@)?([^/@]{1,10250})(?:/(.{1,10250}))?$")
 
 class MessageFuzzer(sleekxmpp.ClientXMPP):
 	"""
@@ -88,6 +89,24 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 
 
+	def parse_JID(data):
+		"""
+			Parse the username and the domain 
+			from the JID.
+		"""
+
+		match = JID_PATTERN.match(data)
+
+		(node, domain, resource) = match.groups()
+
+		return node, domain
+
+	jid = parse_JID(args.login)
+
+	usname = jid[0]
+
+	domain = jid[1]
+
 	# Setup logging
 	# logging.basicConfig(format='%(levelname)-8s %(message)s')
 
@@ -104,7 +123,7 @@ if __name__ == '__main__':
 		while line != '':
 			print str(flag) + " Fuzzing string... " + line.strip()
 			#thread.start_new_thread(ConnectionFuzzer,(line.strip() + '@ubuntu/test', 'bill'))
-			ConnectionFuzzer(line.strip() + "@ubuntu/test", args.password)
+			ConnectionFuzzer(line.strip() + "@"+ domain + "/test", args.password)
 			#ConnectionFuzzer("bill@" + line.strip() + "/test", "bill")
 			ConnectionFuzzer(args.login + "/" + line.strip(), args.password)
 			time.sleep(0.25)
@@ -126,7 +145,7 @@ if __name__ == '__main__':
 			print str(flag1) + " Fuzzing string... " + line.strip()
 			# MessageFuzzer("bill@ubuntu/test", "bill", line.strip() + "@ubuntu", "chat")
 			# MessageFuzzer("bill@ubuntu/test", "bill", "ken@ubuntu", line.strip())
-			MessageFuzzer(args.login, args.password, line.strip() + "@ubuntu", line.strip())
+			MessageFuzzer(args.login, args.password, line.strip() + "@" + domain, line.strip())
 			time.sleep(0.25)
 			line = fuzz.readline()
 			flag1 += 1
