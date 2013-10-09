@@ -9,6 +9,8 @@
 	The fields that are fuzzed are JID , "message to:" field and 
 	"message type" field.
 
+	Pantelis Nakos, University of Piraeus, 2013
+
 	pnakos@gmail.com
 """
 
@@ -19,6 +21,7 @@ import re
 import argparse
 import sys
 
+# Regular expression for a valid JID format
 JID_PATTERN = re.compile("^(?:(.{1,10250})@)?([^/@]{1,10250})(?:/(.{1,10250}))?$")
 
 class MessageFuzzer(sleekxmpp.ClientXMPP):
@@ -27,13 +30,14 @@ class MessageFuzzer(sleekxmpp.ClientXMPP):
 		send a message and then log out.
 	
 	"""
-	def __init__(self, jid, password, recipient, msg_typ):
+	def __init__(self, jid, password, recipient, subject, msg_typ):
 		sleekxmpp.ClientXMPP.__init__(self, jid, password)
 		self['feature_mechanisms'].unencrypted_plain = True # Force plaintext authentication https://groups.google.com/forum/?fromgroups=#!topic/sleekxmpp-discussion/RCzU4qa0Bfg
 		self.connect(address=(args.server, 5222), use_tls = False)
 		self.process(block=False)
 		self.recipient = recipient
 		self.msg_typ = msg_typ
+		self.subject = subject
 		self.add_event_handler("session_start", self.start)
 
 	def start(self, event):
@@ -43,7 +47,7 @@ class MessageFuzzer(sleekxmpp.ClientXMPP):
 		self.send_presence()
 		self.get_roster()
 
-		self.send_message(mto=self.recipient, mbody="Hello World!!!", mtype=self.msg_typ)
+		self.send_message(mto=self.recipient, msubject = self.subject, mbody="Hello World!!!", mtype=self.msg_typ)
 
 		self.disconnect(wait=True)
 
@@ -59,39 +63,28 @@ class ConnectionFuzzer(sleekxmpp.ClientXMPP):
 		self.connect(address=(args.server, 5222), use_tls = False)
 		self.process(block=False)
 		self.add_event_handler("session_start", self.start, threaded=True)
-		# self.add_event_handler("failed_auth", self.failed_auth, threaded=True)
-		# self.add_event_handler("disconnected", self.disconnected, threaded=True)
-
+		
 	def start(self, event):
 		"""
 			Process the session_start event.
 		"""
 		self.send_presence()
 		self.disconnect(wait=False)
-		
-	# def failed_auth(self, event):
-	# 	print "Authentication Failed"
-		
-	# def disconnected(self):
-	# 	self.disconnect(wait=False)
-		
-
-
+	
 
 if __name__ == '__main__':
 
 	# Argument parser set-up
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-s", "--server", help="XMPP server address to fuzz")
-	parser.add_argument("-l", "--login", help="Valid login name (e.g username@server)")
+	parser.add_argument("-l", "--login", help="Valid login name (e.g username@domain)")
 	parser.add_argument("-p", "--password", help="Password for the login name provided")
 	parser.add_argument("-c","--connection", help="Fuzz the JID fields(node, domain, resource)", action="store_true")# action="store_true" not mandatory argument
 	args = parser.parse_args()
 
-
 	def parse_JID(data):
 		"""
-			Parse the username and the domain 
+			Parse the username and domain 
 			from the JID.
 		"""
 
@@ -103,12 +96,9 @@ if __name__ == '__main__':
 
 	jid = parse_JID(args.login)
 
-	usname = jid[0]
+	usrname = jid[0]
 
 	domain = jid[1]
-
-	# Setup logging
-	# logging.basicConfig(format='%(levelname)-8s %(message)s')
 
 	# Open fuzzing strings file
 	fuzz = open("fuzz_strings.txt", "r")
@@ -118,13 +108,13 @@ if __name__ == '__main__':
 		line = fuzz.readline()
 		flag = 0
 		
-		# For every line in file we call ConnectionFuzzer using this line for username
+		# For every line in file we call ConnectionFuzzer using the line for username
 		# and /resource.
 		while line != '':
 			print str(flag) + " Fuzzing string... " + line.strip()
-			#thread.start_new_thread(ConnectionFuzzer,(line.strip() + '@ubuntu/test', 'bill'))
-			ConnectionFuzzer(line.strip() + "@"+ domain + "/test", args.password)
-			#ConnectionFuzzer("bill@" + line.strip() + "/test", "bill")
+			ConnectionFuzzer(line.strip() + "@" + line.strip() + "/" + line.strip(), "12345")
+			ConnectionFuzzer(line.strip() + "@" + domain + "/test", args.password)
+			ConnectionFuzzer(usrname + "@" + line.strip() + "/test", args.password)
 			ConnectionFuzzer(args.login + "/" + line.strip(), args.password)
 			time.sleep(0.25)
 			line = fuzz.readline()
@@ -135,17 +125,18 @@ if __name__ == '__main__':
 				
 	else:
 		
-		print "Fuzzing message fields mto and mtype fields..."
+		print "Fuzzing message, mto and mtype fields..."
 		line = fuzz.readline()
 		flag1 = 0
 		
-		# For every line in file we call ConnectionFuzzer using this line for recipients
+		# For every line in file we call ConnectionFuzzer using the line for recipients
 		# name and message type.
 		while line != '':
 			print str(flag1) + " Fuzzing string... " + line.strip()
-			# MessageFuzzer("bill@ubuntu/test", "bill", line.strip() + "@ubuntu", "chat")
-			# MessageFuzzer("bill@ubuntu/test", "bill", "ken@ubuntu", line.strip())
-			MessageFuzzer(args.login, args.password, line.strip() + "@" + domain, line.strip())
+			MessageFuzzer(args.login, args.password, "ken@ubuntu", "Thema", line.strip())
+			MessageFuzzer(args.login, args.password, "ken@ubuntu", line.strip(), "chat")
+			MessageFuzzer(args.login, args.password, "ken@ubuntu", line.strip(), line.strip())
+			# MessageFuzzer(args.login, args.password, line.strip() + "@" + domain, line.strip(), line.strip())
 			time.sleep(0.25)
 			line = fuzz.readline()
 			flag1 += 1
