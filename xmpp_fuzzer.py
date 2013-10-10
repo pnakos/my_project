@@ -132,7 +132,7 @@ if __name__ == '__main__':
 		line = fuzz.readline()
 		flag1 = 0
 		
-		# For every line in file call ConnectionFuzzer using the line for recipients
+		# For every line in file call MessageFuzzer using the line for recipients
 		# name and message type.
 		while line != '':
 			print str(flag1) + " Fuzzing string... " + line.strip()
