@@ -35,7 +35,7 @@ class MessageFuzzer(sleekxmpp.ClientXMPP):
 	"""
 	def __init__(self, jid, password, recipient, subject, msg_typ):
 		sleekxmpp.ClientXMPP.__init__(self, jid, password)
-		self['feature_mechanisms'].unencrypted_plain = True # Force plaintext authentication https://groups.google.com/forum/?fromgroups=#!topic/sleekxmpp-discussion/RCzU4qa0Bfg
+		self['feature_mechanisms'].unencrypted_plain = True # Force plaintext authentication
 		self.connect(address=(args.server, 5222), use_tls = False)
 		self.process(block=False)
 		self.recipient = recipient
@@ -62,7 +62,7 @@ class ConnectionFuzzer(sleekxmpp.ClientXMPP):
 	"""
 	def __init__(self, jid, password):
 		sleekxmpp.ClientXMPP.__init__(self, jid, password)
-		self['feature_mechanisms'].unencrypted_plain = True # Force plaintext authentication https://groups.google.com/forum/?fromgroups=#!topic/sleekxmpp-discussion/RCzU4qa0Bfg
+		self['feature_mechanisms'].unencrypted_plain = True # Force plaintext authentication
 		self.connect(address=(args.server, 5222), use_tls = False)
 		self.process(block=False)
 		self.add_event_handler("session_start", self.start, threaded=True)
@@ -136,10 +136,7 @@ if __name__ == '__main__':
 		# name and message type.
 		while line != '':
 			print str(flag1) + " Fuzzing string... " + line.strip()
-			MessageFuzzer(args.login, args.password, "ken@ubuntu", "Thema", line.strip())
-			MessageFuzzer(args.login, args.password, "ken@ubuntu", line.strip(), "chat")
-			MessageFuzzer(args.login, args.password, "ken@ubuntu", line.strip(), line.strip())
-			# MessageFuzzer(args.login, args.password, line.strip() + "@" + domain, line.strip(), line.strip())
+			MessageFuzzer(args.login, args.password, line.strip() + "@" + domain, line.strip(), line.strip())
 			time.sleep(0.25)
 			line = fuzz.readline()
 			flag1 += 1
