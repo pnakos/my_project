@@ -20,6 +20,9 @@ import time
 import re
 import argparse
 import sys
+import logging
+
+logging.basicConfig(level=logging.ERROR) #levels CRITICAL, ERROR, WARNING, INFO or DEBUG
 
 # Regular expression for a valid JID format
 JID_PATTERN = re.compile("^(?:(.{1,10250})@)?([^/@]{1,10250})(?:/(.{1,10250}))?$")
@@ -108,11 +111,11 @@ if __name__ == '__main__':
 		line = fuzz.readline()
 		flag = 0
 		
-		# For every line in file we call ConnectionFuzzer using the line for username
+		# For every line in file call ConnectionFuzzer using the line for username
 		# and /resource.
 		while line != '':
 			print str(flag) + " Fuzzing string... " + line.strip()
-			ConnectionFuzzer(line.strip() + "@" + line.strip() + "/" + line.strip(), "12345")
+			ConnectionFuzzer(line.strip() + "@" + line.strip() + "/" + line.strip(), "pass")
 			ConnectionFuzzer(line.strip() + "@" + domain + "/test", args.password)
 			ConnectionFuzzer(usrname + "@" + line.strip() + "/test", args.password)
 			ConnectionFuzzer(args.login + "/" + line.strip(), args.password)
@@ -129,7 +132,7 @@ if __name__ == '__main__':
 		line = fuzz.readline()
 		flag1 = 0
 		
-		# For every line in file we call ConnectionFuzzer using the line for recipients
+		# For every line in file call ConnectionFuzzer using the line for recipients
 		# name and message type.
 		while line != '':
 			print str(flag1) + " Fuzzing string... " + line.strip()
