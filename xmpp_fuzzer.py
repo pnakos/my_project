@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 import sleekxmpp
-# import random
 import time
 import re
 import argparse
