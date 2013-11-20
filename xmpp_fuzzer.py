@@ -120,8 +120,12 @@ if __name__ == '__main__':
 		domain = jid[1]
 
 		# Open fuzzing strings file
-		fuzz = open("fuzz_strings.txt", "r")
-
+		try:
+			fuzz = open("fuzz_strings.txt", "r")
+		except IOError:
+			print "File fuzz_strings.txt not found."
+			sys.exit()
+			
 		if args.connection:
 			print "Fuzzing JID fields..."
 			line = fuzz.readline()
