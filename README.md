@@ -9,5 +9,5 @@ XMPP Fuzzer v0.1
 
 	Pantelis Nakos, University of Piraeus, 2013
 
-	pnakos@gmail.com
+	pnak.dev@gmail.com
 

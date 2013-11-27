@@ -19,7 +19,7 @@ def banner():
 
 	Pantelis Nakos, University of Piraeus, 2013
 
-	pnakos@gmail.com
+	pnak.dev@gmail.com
 
 	"""
 	return banner.__doc__
